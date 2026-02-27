@@ -1,17 +1,47 @@
 {
-  "teamA": { "name": "ENG", "score": "145/4", "overs": "16.2", "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-  "teamB": { "name": "NZ", "score": "Yet to bat", "overs": "0.0", "flag": "🇳🇿" },
+  "teamA": {
+    "name": "ENG",
+    "score": "145/4",
+    "overs": "16.2",
+    "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿"
+  },
+  "teamB": {
+    "name": "NZ",
+    "score": "Yet to bat",
+    "overs": "0.0",
+    "flag": "🇳🇿"
+  },
   "matchInfo": "49th T20I • Super 8 • T20 World Cup 2026",
   "event": "",
-  "batsman1": { "name": "SALT", "runs": 67, "balls": 41, "fours": 7, "sixes": 2, "isStriker": true },
-  "batsman2": { "name": "BROOK", "runs": 34, "balls": 28, "fours": 3, "sixes": 1, "isStriker": false },
-  "bowler": { "name": "SODHI", "overs": "3.2", "maidens": 0, "runs": 28, "wickets": 1 },
+  "batsman1": {
+    "name": "SALT",
+    "runs": 67,
+    "balls": 41,
+    "fours": 7,
+    "sixes": 2,
+    "isStriker": true
+  },
+  "batsman2": {
+    "name": "BROOK",
+    "runs": 34,
+    "balls": 28,
+    "fours": 3,
+    "sixes": 1,
+    "isStriker": false
+  },
+  "bowler": {
+    "name": "SODHI",
+    "overs": "3.2",
+    "maidens": 0,
+    "runs": 28,
+    "wickets": 1
+  },
   "lastWicket": "DUCKETT c Conway b Sodhi 22",
   "nextBatter": "STOKES",
   "runRate": "8.9",
   "requiredRate": "",
   "target": "",
   "ticker": "ENG vs NZ • T20 World Cup 2026 Super 8",
-  "lastUpdated": "2026-02-28T01:35:00Z",
-  "source": "manual"
+  "lastUpdated": "2026-02-27T20:42:43.366Z",
+  "source": "cached"
 }
