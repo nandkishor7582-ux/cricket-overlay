@@ -1,8 +1,8 @@
 {
   "teamA": {
     "name": "ENG",
-    "score": "145/4",
-    "overs": "16.2",
+    "score": "120/2",
+    "overs": "15.2",
     "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿"
   },
   "teamB": {
@@ -14,15 +14,15 @@
   "matchInfo": "49th T20I • Super 8 • T20 World Cup 2026",
   "event": "",
   "batsman1": {
-    "name": "SALT",
-    "runs": 67,
-    "balls": 41,
+    "name": "AAAA",
+    "runs": 5,
+    "balls": 3,
     "fours": 7,
     "sixes": 2,
     "isStriker": true
   },
   "batsman2": {
-    "name": "BROOK",
+    "name": "VFDD",
     "runs": 34,
     "balls": 28,
     "fours": 3,
@@ -42,6 +42,6 @@
   "requiredRate": "",
   "target": "",
   "ticker": "ENG vs NZ • T20 World Cup 2026 Super 8",
-  "lastUpdated": "2026-02-27T20:42:43.366Z",
+  "lastUpdated": "2026-02-27T20:44:11.474Z",
   "source": "cached"
 }
