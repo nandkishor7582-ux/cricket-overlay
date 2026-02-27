@@ -3,7 +3,6 @@ name: 🏏 Cricket Auto-Update
 on:
   schedule:
     - cron: '*/5 * * * *'
-
   workflow_dispatch:
     inputs:
       match_url:
@@ -36,21 +35,25 @@ jobs:
 
       - name: ⚙️ Apply Manual URL Override
         if: github.event.inputs.match_url != ''
-        run: |
-          node -e "
-            const fs = require('fs');
-            const cfg = JSON.parse(fs.readFileSync('match-config.json','utf8'));
-            cfg.matchUrl = '${{ github.event.inputs.match_url }}';
-            cfg.enabled = true;
-            cfg.lastSet = new Date().toISOString();
-            fs.writeFileSync('match-config.json', JSON.stringify(cfg, null, 2));
-            console.log('Match URL set to:', cfg.matchUrl);
-          "
+        run: node -e "var fs=require('fs');var cfg=JSON.parse(fs.readFileSync('match-config.json','utf8'));cfg.matchUrl='${{ github.event.inputs.match_url }}';cfg.enabled=true;cfg.lastSet=new Date().toISOString();fs.writeFileSync('match-config.json',JSON.stringify(cfg,null,2));console.log('URL set to:',cfg.matchUrl);"
 
       - name: 🔍 Check Config
         id: check_config
         run: |
-          node -e "
-            const cfg = JSON.parse(require('fs').readFileSync('match-config.json','utf8'));
-            console.log('enabled=' + cfg.enabled);
-            console.log('url=' + c
+          node check-config.js || echo "SKIP=true" >> $GITHUB_OUTPUT
+
+      - name: 🕷️ Scrape Live Data
+        if: steps.check_config.outputs.SKIP != 'true'
+        run: node scraper.js
+        timeout-minutes: 3
+
+      - name: 💾 Commit data.json
+        if: steps.check_config.outputs.SKIP != 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "🏏 Cricket Bot"
+          git add data.json match-config.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "🏏 Live update"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
