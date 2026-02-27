@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cricket Live Overlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700;800&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+/* ── CONFIG: CHANGE YOUR GITHUB RAW URL HERE ── */
+/* DATA_URL is set in the script block below     */
+
+body {
+  width:1920px; height:1080px;
+  background:transparent;
+  overflow:hidden;
+  font-family:'Barlow Condensed',sans-serif;
+}
+
+/* ═══════════════════════════════════════
+   TOP SCOREBOARD BAR
+═══════════════════════════════════════ */
+#topBar {
+  position:absolute; top:0; left:0; right:0;
+  height:115px;
+  display:flex;
+  z-index:20;
+}
+
+/* Team Block */
+.t-block {
+  width:500px;
+  background:linear-gradient(160deg,#06111f 0%,#0d2040 60%,#091830 100%);
+  border-bottom:5px solid #d4a017;
+  display:flex; align-items:center;
+  position:relative; overflow:hidden;
+}
+.t-block::after {
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(90deg,rgba(255,255,255,0.04) 0%,transparent 60%);
+}
+.t-block.left { clip-path:polygon(0 0,100% 0,92% 100%,0 100%); padding:0 24px 0 44px; }
+.t-block.right { clip-path:polygon(8% 0,100% 0,100% 100%,0 100%); padding:0 44px 0 24px; flex-direction:row-reverse; margin-left:auto; }
+
+.t-side-tab {
+  position:absolute; top:0; bottom:0;
+  width:32px;
+  display:flex; align-items:center; justify-content:center;
+  writing-mode:vertical-rl;
+  font-size:11px; font-weight:900; letter-spacing:3px; color:#fff;
+  text-transform:uppercase;
+}
+.t-block.left .t-side-tab { left:0; background:#c0392b; transform:rotate(180deg); }
+.t-block.right .t-side-tab { right:0; background:#e67e00; }
+
+.t-flag {
+  width:76px; height:76px; border-radius:50%;
+  border:3px solid #d4a017;
+  background:#111; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:38px; overflow:hidden;
+  box-shadow:0 0 20px rgba(212,160,23,0.4), inset 0 0 10px rgba(0,0,0,0.5);
+}
+.t-flag img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+
+.t-info { display:flex; flex-direction:column; justify-content:center; margin:0 14px; }
+.t-block.right .t-info { align-items:flex-end; }
+.t-name {
+  font-family:'Oswald',sans-serif;
+  font-size:30px; font-weight:700; color:#fff;
+  letter-spacing:3px; line-height:1;
+  text-shadow:1px 1px 4px rgba(0,0,0,0.8);
+}
+.t-score {
+  font-family:'Oswald',sans-serif;
+  font-size:52px; font-weight:700; color:#f5c518;
+  line-height:1; letter-spacing:1px;
+  text-shadow:0 2px 8px rgba(0,0,0,0.6);
+}
+.t-score .ovs { font-size:20px; color:#7fa8c8; font-weight:400; margin-left:4px; }
+.t-batting-tag {
+  font-size:12px; font-weight:800; letter-spacing:3px;
+  color:#f5c518; opacity:0.8;
+  font-family:'Teko',sans-serif;
+}
+
+/* Center Top */
+#centerTop {
+  flex:1;
+  background:linear-gradient(180deg,#000d1a 0%,#05172e 100%);
+  border-bottom:5px solid #d4a017;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+}
+#centerTop::before {
+  content:'';
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 50%, rgba(30,80,180,0.15) 0%, transparent 70%);
+}
+.c-event {
+  font-family:'Oswald',sans-serif;
+  font-size:42px; font-weight:700;
+  color:#fff; letter-spacing:5px;
+  text-transform:uppercase; z-index:1;
+  transition:all 0.3s;
+}
+.c-event.ev-live   { color:#4cff72; text-shadow:0 0 20px rgba(76,255,114,0.5); }
+.c-event.ev-drs    { color:#ff3030; text-shadow:0 0 30px rgba(255,0,0,0.7); animation:evFlash 0.5s infinite alternate; }
+.c-event.ev-six    { color:#f5c518; text-shadow:0 0 30px rgba(245,197,24,0.8); animation:evPulse 0.4s ease-in-out 3; }
+.c-event.ev-four   { color:#4cf0ff; text-shadow:0 0 30px rgba(76,240,255,0.8); animation:evPulse 0.4s ease-in-out 3; }
+.c-event.ev-wicket { color:#ff4444; text-shadow:0 0 30px rgba(255,68,68,0.9); animation:evFlash 0.3s infinite alternate; }
+@keyframes evFlash { from{opacity:1} to{opacity:0.4} }
+@keyframes evPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+
+/* ═══════════════════════════════════════
+   INFO BAR
+═══════════════════════════════════════ */
+#infoBar {
+  position:absolute; top:115px; left:0; right:0;
+  height:46px;
+  background:linear-gradient(90deg,#071220 0%,#0e2040 50%,#071220 100%);
+  border-bottom:3px solid #1e3e70;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 40px; z-index:19;
+}
+.ib-item { font-size:21px; font-weight:700; color:#cdd8e8; font-family:'Teko',sans-serif; letter-spacing:1px; }
+.ib-item b { color:#f5c518; font-weight:700; }
+.ib-center { font-size:24px; color:#f5c518; font-family:'Teko',sans-serif; letter-spacing:2px; }
+.ib-right { color:#7fa8d0; font-size:17px; letter-spacing:3px; font-family:'Barlow Condensed',sans-serif; font-weight:600; }
+
+/* ═══════════════════════════════════════
+   DRS BANNER
+═══════════════════════════════════════ */
+#drsBanner {
+  position:absolute; top:161px; left:0; right:0;
+  height:95px; z-index:18;
+  display:none; align-items:center; justify-content:center; gap:50px;
+  background:linear-gradient(90deg,transparent,rgba(180,0,0,0.12),transparent);
+}
+#drsBanner.on { display:flex; }
+.drs-word {
+  font-family:'Oswald',sans-serif;
+  font-size:80px; font-weight:800;
+  color:#ff2020;
+  text-shadow:0 0 40px rgba(255,0,0,0.8), 4px 4px 0 #000;
+  letter-spacing:6px;
+  animation:evFlash 0.5s infinite alternate;
+}
+
+/* ═══════════════════════════════════════
+   TICKER
+═══════════════════════════════════════ */
+#ticker {
+  position:absolute; top:161px; left:0; right:0;
+  height:36px; z-index:17;
+  background:#d4a017;
+  display:flex; align-items:center; overflow:hidden;
+}
+.tick-badge {
+  background:#c0392b; height:100%; padding:0 18px;
+  display:flex; align-items:center;
+  font-size:14px; font-weight:800; color:#fff; letter-spacing:2px;
+  white-space:nowrap; flex-shrink:0;
+}
+.tick-text {
+  font-size:16px; font-weight:700; color:#000;
+  white-space:nowrap;
+  animation:tickScroll 35s linear infinite;
+  padding-left:60px;
+}
+@keyframes tickScroll {
+  from { transform:translateX(110vw); }
+  to   { transform:translateX(-100%); }
+}
+
+/* ═══════════════════════════════════════
+   SIDE PLAYER THUMBNAILS
+═══════════════════════════════════════ */
+.side-player {
+  position:absolute; bottom:390px; z-index:15;
+  width:145px; display:flex; flex-direction:column; align-items:center; gap:4px;
+}
+#sideLeft  { left:12px; }
+#sideRight { right:12px; }
+.side-img {
+  width:115px; height:138px;
+  border:2px solid rgba(212,160,23,0.45);
+  border-radius:3px; overflow:hidden; background:#0a1525;
+  display:flex; align-items:center; justify-content:center;
+  font-size:48px; color:rgba(255,255,255,0.2);
+}
+.side-img img { width:100%; height:100%; object-fit:cover; object-position:top; }
+.side-lbl {
+  background:rgba(0,0,0,0.82); border:1px solid rgba(212,160,23,0.3);
+  padding:2px 10px; font-size:11px; font-weight:800;
+  color:#7fa8c8; letter-spacing:2.5px; text-transform:uppercase;
+  width:100%; text-align:center; font-family:'Barlow Condensed',sans-serif;
+}
+.side-nm {
+  font-size:14px; font-weight:700; color:#fff;
+  text-align:center; font-family:'Teko',sans-serif;
+  letter-spacing:1px; line-height:1.1;
+}
+
+/* ═══════════════════════════════════════
+   LAST WICKET BAR
+═══════════════════════════════════════ */
+#lwBar {
+  position:absolute; bottom:360px; left:0; right:0;
+  height:38px;
+  background:linear-gradient(90deg,#050d18,#0f1f38,#050d18);
+  border-top:2px solid #1a2e50; border-bottom:3px solid #d4a017;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 36px; z-index:16;
+}
+.lw-sub { display:flex; align-items:center; gap:8px; }
+.lw-btn { background:#c0392b; padding:3px 14px; font-size:13px; font-weight:900; color:#fff; letter-spacing:1px; border-radius:2px; }
+.lw-bell { font-size:16px; }
+.lw-score { font-size:16px; font-weight:700; color:#aac0d8; font-family:'Teko',sans-serif; letter-spacing:1px; }
+.lw-score b { color:#f5c518; }
+
+/* ═══════════════════════════════════════
+   BOTTOM PLAYER CARDS
+═══════════════════════════════════════ */
+#bottomPanel {
+  position:absolute; bottom:0; left:0; right:0;
+  height:360px; display:flex; z-index:14;
+}
+
+.p-card {
+  flex:1; position:relative; overflow:hidden;
+  background:linear-gradient(180deg,rgba(4,14,30,0.93) 0%,rgba(8,20,42,0.98) 100%);
+  border-top:5px solid #d4a017;
+}
+.p-card + .p-card { border-left:2px solid rgba(212,160,23,0.18); }
+.p-card::before {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.025) 0%,transparent 50%);
+}
+
+/* Card glow strip at top */
+.p-card::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(212,160,23,0.6),transparent);
+}
+
+.p-role {
+  position:absolute; top:10px; left:50%; transform:translateX(-50%);
+  background:rgba(0,0,0,0.75); border:1px solid rgba(255,255,255,0.15);
+  padding:3px 18px; white-space:nowrap; border-radius:2px;
+  font-size:12px; font-weight:800; color:#7fa8c8; letter-spacing:3px;
+  display:flex; align-items:center; gap:6px;
+}
+
+/* Photo area */
+.p-photo-wrap {
+  position:absolute; top:0; left:0; right:0; height:230px;
+  display:flex; align-items:flex-end; justify-content:center;
+  overflow:hidden;
+}
+.p-photo {
+  width:200px; height:220px;
+  object-fit:cover; object-position:top center;
+  filter:drop-shadow(0 10px 24px rgba(0,0,0,0.95));
+  border-radius:4px 4px 0 0;
+}
+.p-photo-ph {
+  width:140px; height:190px;
+  background:linear-gradient(180deg,#112244,#06111f);
+  border:2px solid rgba(212,160,23,0.2);
+  border-radius:4px 4px 0 0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:70px; color:rgba(255,255,255,0.15);
+}
+
+/* Striker diamond */
+.p-striker {
+  position:absolute; top:8px; right:10px;
+  width:20px; height:20px;
+  clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);
+  background:#f5c518;
+  box-shadow:0 0 10px rgba(245,197,24,0.8);
+  display:none;
+}
+.p-striker.on { display:block; }
+
+/* Stats area */
+.p-stats {
+  position:absolute; bottom:0; left:0; right:0; height:150px;
+  background:linear-gradient(180deg,transparent 0%,rgba(0,5,18,0.99) 22%);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:flex-end;
+  padding-bottom:14px; gap:5px;
+}
+
+.p-name {
+  font-family:'Oswald',sans-serif;
+  font-size:36px; font-weight:700; color:#fff;
+  letter-spacing:1px; line-height:1; text-align:center;
+}
+.p-main-score {
+  font-family:'Oswald',sans-serif;
+  font-size:56px; font-weight:700; color:#fff;
+  line-height:1; text-align:center;
+}
+.p-main-score .pb { font-size:28px; color:#7fa8c8; font-weight:400; }
+.p-main-score.bowl { font-size:46px; }
+
+.p-details {
+  display:flex; gap:22px; align-items:center;
+}
+.p-det {
+  font-size:17px; color:#6a90b0; font-weight:700;
+  font-family:'Teko',sans-serif; letter-spacing:0.5px;
+}
+.p-det b { color:#f5c518; font-size:19px; }
+
+/* ═══════════════════════════════════════
+   BALL-BY-BALL STRIP  (optional)
+═══════════════════════════════════════ */
+#ballStrip {
+  position:absolute; top:197px; right:20px;
+  display:flex; gap:6px; z-index:16;
+}
+.ball {
+  width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px; font-weight:800; font-family:'Oswald',sans-serif;
+  border:2px solid rgba(255,255,255,0.2);
+}
+.ball.dot   { background:#1a2e50; color:#5588aa; }
+.ball.run1  { background:#1e4d1e; color:#4cff72; }
+.ball.run2  { background:#1e4d1e; color:#4cff72; }
+.ball.run3  { background:#1e4d1e; color:#4cff72; }
+.ball.four  { background:#0d3a4a; color:#4cf0ff; border-color:#4cf0ff; }
+.ball.six   { background:#3a2a00; color:#f5c518; border-color:#f5c518; }
+.ball.wicket{ background:#4a0d0d; color:#ff4444; border-color:#ff4444; }
+.ball.wide  { background:#2a1a3a; color:#cc88ff; border-color:#cc88ff; }
+.ball.nb    { background:#3a2a00; color:#ffaa00; border-color:#ffaa00; }
+</style>
+</head>
+<body>
+
+<!-- ════════ TOP BAR ════════ -->
+<div id="topBar">
+  <div class="t-block left" id="teamABlock">
+    <div class="t-side-tab" id="teamATab">SCORE</div>
+    <div class="t-flag" id="teamAFlag"></div>
+    <div class="t-info">
+      <div class="t-batting-tag" id="teamATag">BATTING</div>
+      <div class="t-name" id="teamAName">PAKISTAN</div>
+      <div class="t-score"><span id="teamAScore">122/4</span><span class="ovs" id="teamAOvers"> 15.4</span></div>
+    </div>
+  </div>
+
+  <div id="centerTop">
+    <div class="c-event" id="matchEvent">LBW CHECK</div>
+  </div>
+
+  <div class="t-block right" id="teamBBlock">
+    <div class="t-side-tab" id="teamBTab">TARGET</div>
+    <div class="t-flag" id="teamBFlag"></div>
+    <div class="t-info">
+      <div class="t-batting-tag" id="teamBTag" style="text-align:right">BOWLING</div>
+      <div class="t-name" id="teamBName">ENGLAND</div>
+      <div class="t-score" style="text-align:right"><span id="teamBScore">BOWL</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ INFO BAR ════════ -->
+<div id="infoBar">
+  <div class="ib-item">P'ship : <b id="ib-pship">49(29)</b></div>
+  <div class="ib-center" id="ib-center">CRR : <b id="ib-crr">7.79</b>&nbsp;&nbsp;|&nbsp;&nbsp;RRR : <b id="ib-rrr">8.25</b></div>
+  <div class="ib-right" id="ib-note">PAK OPT TO BAT</div>
+</div>
+
+<!-- ════════ TICKER ════════ -->
+<div id="ticker">
+  <div class="tick-badge">🔴 LIVE</div>
+  <div class="tick-text" id="tickText">PAKISTAN vs ENGLAND | T20 WORLD CUP</div>
+</div>
+
+<!-- ════════ DRS BANNER ════════ -->
+<div id="drsBanner"></div>
+
+<!-- ════════ BALL STRIP ════════ -->
+<div id="ballStrip" id="ballStrip"></div>
+
+<!-- ════════ SIDE PLAYERS ════════ -->
+<div class="side-player" id="sideLeft">
+  <div class="side-img" id="sideLeftImg">👤</div>
+  <div class="side-lbl" id="sideLeftLbl">NEXT BATTER</div>
+  <div class="side-nm" id="sideLeftNm">BABAR AZAM</div>
+</div>
+<div class="side-player" id="sideRight">
+  <div class="side-img" id="sideRightImg">👤</div>
+  <div class="side-lbl" id="sideRightLbl">LAST WICKET</div>
+  <div class="side-nm" id="sideRightNm">RIZWAN</div>
+</div>
+
+<!-- ════════ LAST WICKET BAR ════════ -->
+<div id="lwBar">
+  <div class="lw-sub">
+    <div class="lw-btn">● SUBSCRIBE</div>
+    <span class="lw-bell">🔔</span>
+  </div>
+  <div class="lw-score">Last Wkt : <b id="lwScore">25(24)</b></div>
+</div>
+
+<!-- ════════ BOTTOM PLAYER CARDS ════════ -->
+<div id="bottomPanel">
+
+  <!-- Batsman 1 -->
+  <div class="p-card">
+    <div class="p-role"><span>🏏</span><span>BATSMAN</span></div>
+    <div class="p-striker on" id="bat1striker"></div>
+    <div class="p-photo-wrap"><div class="p-photo-ph" id="bat1photo">🏏</div></div>
+    <div class="p-stats">
+      <div class="p-name" id="bat1name">S FARHAN</div>
+      <div class="p-main-score"><span id="bat1runs">63</span><span class="pb">(<span id="bat1balls">45</span>)</span> <span id="bat1bat" style="font-size:22px;color:#f5c518">🏏</span></div>
+      <div class="p-details">
+        <div class="p-det">4s:<b id="bat1fours">7</b></div>
+        <div class="p-det">6s:<b id="bat1sixes">2</b></div>
+        <div class="p-det">SR:<b id="bat1sr">140.00</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Batsman 2 -->
+  <div class="p-card">
+    <div class="p-role"><span>🏏</span><span>BATSMAN</span></div>
+    <div class="p-striker" id="bat2striker"></div>
+    <div class="p-photo-wrap"><div class="p-photo-ph" id="bat2photo">🏏</div></div>
+    <div class="p-stats">
+      <div class="p-name" id="bat2name">F ZAMAN</div>
+      <div class="p-main-score"><span id="bat2runs">19</span><span class="pb">(<span id="bat2balls">13</span>)</span> <span id="bat2bat" style="font-size:22px;color:#f5c518;display:none">🏏</span></div>
+      <div class="p-details">
+        <div class="p-det">4s:<b id="bat2fours">2</b></div>
+        <div class="p-det">6s:<b id="bat2sixes">1</b></div>
+        <div class="p-det">SR:<b id="bat2sr">146.15</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bowler -->
+  <div class="p-card">
+    <div class="p-role"><span>⚡</span><span>BOWLER</span></div>
+    <div class="p-photo-wrap"><div class="p-photo-ph" id="bowlphoto">⚡</div></div>
+    <div class="p-stats">
+      <div class="p-name" id="bowlname">J OVERTON</div>
+      <div class="p-main-score bowl"><span id="bowlfigs">22-1</span><span class="pb">(<span id="bowlovers">2.4</span>)</span></div>
+      <div class="p-details">
+        <div class="p-det">ECON:<b id="bowlecon">8.25</b></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  ⚙️  CONFIGURE YOUR GITHUB RAW DATA URL HERE
+//  Replace with your own:
+//  https://raw.githubusercontent.com/YOURNAME/YOURREPO/main/data.json
+// ══════════════════════════════════════════════════════
+const DATA_URL = 'https://raw.githubusercontent.com/YOURNAME/YOURREPO/main/data.json';
+const REFRESH_MS = 5000; // refresh every 5 seconds
+
+// ══════════════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════════════
+function render(d) {
+  // Team A
+  setText('teamAName', d.teamA.name);
+  setText('teamAScore', d.teamA.score);
+  setText('teamAOvers', d.teamA.overs ? ' ' + d.teamA.overs : '');
+  setText('teamATab', d.teamA.isBatting ? 'SCORE' : 'TARGET');
+  setText('teamATag', d.teamA.isBatting ? 'BATTING ●' : 'BOWLING');
+  setFlag('teamAFlag', d.teamA.flagUrl, d.teamA.flagEmoji);
+
+  // Team B
+  setText('teamBName', d.teamB.name);
+  setText('teamBScore', d.teamB.isBatting
+    ? d.teamB.score + (d.teamB.overs ? ' ' + d.teamB.overs : '')
+    : (d.teamB.score || 'BOWL'));
+  setText('teamBTab', d.teamB.isBatting ? 'SCORE' : 'TARGET');
+  setText('teamBTag', d.teamB.isBatting ? 'BATTING ●' : 'BOWLING');
+  setFlag('teamBFlag', d.teamB.flagUrl, d.teamB.flagEmoji);
+
+  // Info bar
+  setText('ib-pship', d.matchInfo.partnership);
+  setText('ib-crr', d.matchInfo.crr);
+  setText('ib-rrr', d.matchInfo.rrr || '—');
+  setText('ib-note', d.matchInfo.note);
+  if (!d.matchInfo.rrr) document.getElementById('ib-center').innerHTML =
+    'CRR : <b>' + d.matchInfo.crr + '</b>';
+
+  // Event
+  const ev = document.getElementById('matchEvent');
+  ev.textContent = d.event || 'LIVE';
+  ev.className = 'c-event';
+  const evMap = {
+    'LIVE':'ev-live','DRS':'ev-drs','LBW CHECK':'ev-drs','REVIEW':'ev-drs',
+    'SIX!':'ev-six','FOUR!':'ev-four','WICKET!':'ev-wicket','OUT!':'ev-wicket'
+  };
+  if (evMap[d.event]) ev.classList.add(evMap[d.event]);
+
+  // DRS banner
+  const db = document.getElementById('drsBanner');
+  if (d.event === 'DRS') {
+    db.classList.add('on');
+    db.innerHTML = '<div class="drs-word">DRS</div>'.repeat(4);
+  } else db.classList.remove('on');
+
+  // Ticker
+  const tk = document.getElementById('ticker');
+  if (d.showTicker && d.ticker) {
+    tk.style.display = 'flex';
+    setText('tickText', d.ticker);
+  } else { tk.style.display = 'none'; }
+
+  // Batsman 1
+  setText('bat1name', d.batsman1.name);
+  setText('bat1runs', d.batsman1.runs);
+  setText('bat1balls', d.batsman1.balls);
+  setText('bat1fours', d.batsman1.fours);
+  setText('bat1sixes', d.batsman1.sixes);
+  setText('bat1sr', d.batsman1.sr);
+  toggleClass('bat1striker', 'on', d.batsman1.isStriker);
+  document.getElementById('bat1bat').style.display = d.batsman1.isStriker ? '' : 'none';
+  setPhoto('bat1photo', d.batsman1.photoUrl, '🏏', true);
+
+  // Batsman 2
+  setText('bat2name', d.batsman2.name);
+  setText('bat2runs', d.batsman2.runs);
+  setText('bat2balls', d.batsman2.balls);
+  setText('bat2fours', d.batsman2.fours);
+  setText('bat2sixes', d.batsman2.sixes);
+  setText('bat2sr', d.batsman2.sr);
+  toggleClass('bat2striker', 'on', d.batsman2.isStriker);
+  document.getElementById('bat2bat').style.display = d.batsman2.isStriker ? '' : 'none';
+  setPhoto('bat2photo', d.batsman2.photoUrl, '🏏', true);
+
+  // Bowler
+  setText('bowlname', d.bowler.name);
+  setText('bowlfigs', d.bowler.runs + '-' + d.bowler.wickets);
+  setText('bowlovers', d.bowler.overs);
+  setText('bowlecon', d.bowler.economy);
+  setPhoto('bowlphoto', d.bowler.photoUrl, '⚡', true);
+
+  // Side players
+  const sl = document.getElementById('sideLeft');
+  const sr = document.getElementById('sideRight');
+  sl.style.display = d.nextBatter.show ? 'flex' : 'none';
+  sr.style.display = d.lastWicket.show ? 'flex' : 'none';
+  setText('sideLeftNm', d.nextBatter.name);
+  setText('sideRightNm', d.lastWicket.name);
+  setPhoto('sideLeftImg', d.nextBatter.photoUrl, '👤', false);
+  setPhoto('sideRightImg', d.lastWicket.photoUrl, '👤', false);
+
+  // Last wicket bar
+  setText('lwScore', d.lastWicket.score || '—');
+
+  // Ball strip
+  if (d.balls && d.balls.length) renderBalls(d.balls);
+}
+
+function renderBalls(balls) {
+  const strip = document.getElementById('ballStrip');
+  strip.innerHTML = balls.slice(-6).map(b => {
+    const cls = b === 0 ? 'dot' : b === 4 ? 'four' : b === 6 ? 'six' : b === 'W' ? 'wicket' : b === 'Wd' ? 'wide' : b === 'NB' ? 'nb' : 'run' + b;
+    return `<div class="ball ${cls}">${b === 0 ? '•' : b}</div>`;
+  }).join('');
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val ?? '';
+}
+function setFlag(id, url, emoji) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = url
+    ? `<img src="${url}" alt="flag">`
+    : `<span style="font-size:38px;line-height:1">${emoji}</span>`;
+}
+function setPhoto(id, url, fallback, isCard) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (url) {
+    el.innerHTML = `<img ${isCard ? 'class="p-photo"' : 'style="width:100%;height:100%;object-fit:cover;object-position:top"'} src="${url}" alt="">`;
+    el.className = isCard ? 'p-photo-wrap' : 'side-img';
+  } else {
+    el.textContent = fallback;
+    el.className = isCard ? 'p-photo-ph' : 'side-img';
+  }
+}
+function toggleClass(id, cls, on) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle(cls, on);
+}
+
+// ══════════════════════════════════════════════════════
+//  DATA FETCHER
+// ══════════════════════════════════════════════════════
+async function fetchData() {
+  try {
+    const r = await fetch(DATA_URL + '?_=' + Date.now());
+    if (!r.ok) return;
+    const d = await r.json();
+    render(d);
+  } catch(e) { /* keep showing last data */ }
+}
+
+// Boot with embedded fallback so overlay never shows blank
+const FALLBACK = {"teamA":{"name":"TEAM A","shortName":"A","flagUrl":"","flagEmoji":"🏏","score":"0/0","overs":"0.0","isBatting":true},"teamB":{"name":"TEAM B","shortName":"B","flagUrl":"","flagEmoji":"🎯","score":"—","overs":"","isBatting":false},"matchInfo":{"format":"T20","series":"","venue":"","partnership":"0(0)","crr":"0.00","rrr":"","note":"WAITING FOR MATCH DATA"},"event":"LIVE","batsman1":{"name":"BATSMAN 1","runs":0,"balls":0,"fours":0,"sixes":0,"sr":"0.00","photoUrl":"","isStriker":true},"batsman2":{"name":"BATSMAN 2","runs":0,"balls":0,"fours":0,"sixes":0,"sr":"0.00","photoUrl":"","isStriker":false},"bowler":{"name":"BOWLER","wickets":0,"runs":0,"overs":"0.0","economy":"0.00","photoUrl":""},"nextBatter":{"name":"NEXT BATTER","photoUrl":"","show":true},"lastWicket":{"name":"—","score":"—","photoUrl":"","show":true},"ticker":"OVERLAY READY — UPDATE data.json ON GITHUB TO BEGIN","showTicker":true};
+render(FALLBACK);
+fetchData();
+setInterval(fetchData, REFRESH_MS);
+
+// Global update hook (for OBS scripting)
+window.updateMatch = function(patch) { render(Object.assign(FALLBACK, patch)); };
+</script>
+</body>
+</html>

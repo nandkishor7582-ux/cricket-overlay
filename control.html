@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏏 Cricket Live Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#080f1c; --panel:#0f1a2e; --panel2:#131f35;
+  --border:#1e3254; --gold:#f5c518; --red:#c0392b;
+  --green:#27ae60; --blue:#1a6edc; --text:#cdd8e8;
+  --muted:#4a6880; --radius:10px; --inp:#0a1422;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding:16px;}
+
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.hdr h1{font-family:'Oswald',sans-serif;font-size:24px;font-weight:700;color:var(--gold);letter-spacing:2px;}
+.live-dot{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#4cff72;letter-spacing:1px;}
+.dot{width:10px;height:10px;border-radius:50%;background:#4cff72;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+
+/* Panels */
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+.panel-title{font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;color:var(--gold);letter-spacing:1px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+
+label{display:block;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:5px;margin-top:12px;}
+label:first-child{margin-top:0;}
+input,select,textarea{width:100%;background:var(--inp);border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;font-size:14px;color:var(--text);font-family:'Inter',sans-serif;outline:none;transition:border 0.2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);}
+input[type=checkbox]{width:auto;accent-color:var(--blue);cursor:pointer;}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;letter-spacing:0.3px;font-family:'Inter',sans-serif;}
+.btn-gold{background:var(--gold);color:#000;}
+.btn-gold:hover{background:#d4a820;transform:translateY(-1px);}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-blue:hover{background:#1557b0;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{background:#219a52;}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{background:#a93226;}
+.btn-gray{background:#1e3050;color:var(--text);}
+.btn-gray:hover{background:#263d60;}
+.btn-full{width:100%;justify-content:center;}
+.btn-sm{padding:7px 14px;font-size:12px;}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+
+/* Grid */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* Event buttons */
+.ev-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px;}
+.ev-btn{padding:10px 4px;border:1.5px solid var(--border);border-radius:6px;background:var(--inp);color:var(--text);font-size:12px;font-weight:700;cursor:pointer;text-align:center;transition:all 0.12s;letter-spacing:0.3px;}
+.ev-btn:hover{border-color:var(--gold);color:var(--gold);}
+.ev-btn.sel{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 0 12px rgba(26,110,220,0.4);}
+.ev-btn.sel.ev-six{background:#b8860b;border-color:var(--gold);color:var(--gold);}
+.ev-btn.sel.ev-wicket{background:#8b0000;border-color:var(--red);}
+
+/* Status */
+.status{padding:10px 14px;border-radius:6px;font-size:13px;margin-top:10px;display:none;font-weight:500;}
+.s-ok{background:rgba(39,174,96,0.12);border:1px solid #27ae60;color:#4cff72;display:block;}
+.s-err{background:rgba(192,57,43,0.12);border:1px solid #c0392b;color:#ff7070;display:block;}
+.s-load{background:rgba(26,110,220,0.12);border:1px solid #1a6edc;color:#60b0ff;display:block;}
+.s-warn{background:rgba(245,197,24,0.12);border:1px solid var(--gold);color:var(--gold);display:block;}
+
+/* Token setup */
+.token-area{background:rgba(26,110,220,0.08);border:1px solid #1e3870;border-radius:8px;padding:14px;margin-bottom:14px;}
+.token-steps{margin-top:10px;}
+.tstep{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;line-height:1.5;color:var(--text);}
+.tstep:last-child{border:none;}
+.tnum{width:24px;height:24px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+code{background:rgba(255,255,255,0.08);padding:1px 7px;border-radius:3px;font-family:'Courier New',monospace;font-size:12px;color:#4cf0ff;}
+
+/* Config display */
+.config-info{background:var(--inp);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:12px;font-family:'Courier New',monospace;color:#4cf0ff;margin-top:8px;}
+
+/* Activity log */
+#actLog{background:#000a14;border:1px solid var(--border);border-radius:6px;padding:10px 14px;height:120px;overflow-y:auto;font-size:12px;font-family:'Courier New',monospace;color:#4cff72;margin-top:8px;}
+.log-line{padding:1px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.log-time{color:var(--muted);}
+.log-ok{color:#4cff72;}
+.log-err{color:#ff7070;}
+.log-info{color:#60b0ff;}
+
+/* Toggle row */
+.tog{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:8px 0;}
+.tog-label{font-size:13px;font-weight:600;color:var(--text);}
+.tog-switch{position:relative;width:44px;height:24px;}
+.tog-switch input{display:none;}
+.tog-track{position:absolute;inset:0;background:#1e3050;border-radius:24px;cursor:pointer;transition:0.2s;}
+.tog-switch input:checked+.tog-track{background:var(--green);}
+.tog-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:0.2s;}
+.tog-switch input:checked~.tog-knob{left:23px;}
+
+/* Mobile responsive */
+@media(max-width:600px){.g2,.g3,.ev-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <h1>🏏 CRICKET LIVE CONTROL</h1>
+    <div style="font-size:12px;color:var(--muted);margin-top:2px">Auto-updates overlay every 5 min via GitHub Actions</div>
+  </div>
+  <div class="live-dot"><div class="dot"></div><span id="liveStatus">READY</span></div>
+</div>
+
+<!-- ══ GITHUB SETUP (shown until token saved) ══ -->
+<div id="setupArea" class="panel">
+  <div class="panel-title">🔑 ONE-TIME GITHUB SETUP</div>
+  <div class="token-area">
+    <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:8px">Create a GitHub Token (do this once only):</div>
+    <div class="token-steps">
+      <div class="tstep"><div class="tnum">1</div><div>Go to <b>github.com</b> → click your profile photo → <b>Settings</b></div></div>
+      <div class="tstep"><div class="tnum">2</div><div><b>Developer settings</b> → <b>Personal access tokens</b> → <b>Tokens (classic)</b></div></div>
+      <div class="tstep"><div class="tnum">3</div><div>Click <b>Generate new token (classic)</b> → give it a name like <code>cricket-overlay</code></div></div>
+      <div class="tstep"><div class="tnum">4</div><div>Check the <code>repo</code> scope → click <b>Generate token</b> → COPY IT</div></div>
+      <div class="tstep"><div class="tnum">5</div><div>Paste it below and click SAVE — stored in your browser only, never uploaded</div></div>
+    </div>
+  </div>
+  <label>Your GitHub Token</label>
+  <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+  <label>Your GitHub Username</label>
+  <input type="text" id="ghUser" placeholder="nandkishor7582-ux">
+  <label>Repository Name</label>
+  <input type="text" id="ghRepo" value="cricket-overlay">
+  <div class="btn-group">
+    <button class="btn btn-gold" onclick="saveToken()">💾 SAVE & TEST CONNECTION</button>
+  </div>
+  <div id="tokenStatus" class="status"></div>
+</div>
+
+<!-- ══ MATCH URL (main control) ══ -->
+<div class="panel">
+  <div class="panel-title">📡 LIVE MATCH URL</div>
+  <label>Paste Crex.com or Cricbuzz match scorecard URL</label>
+  <input type="text" id="matchUrl" placeholder="https://crex.com/cricket-scorecard/... OR https://www.cricbuzz.com/live-cricket-scorecard/12345/...">
+
+  <div class="tog">
+    <span class="tog-label">🟢 Auto-scraping ENABLED</span>
+    <label class="tog-switch">
+      <input type="checkbox" id="scraperEnabled" checked>
+      <div class="tog-track"></div>
+      <div class="tog-knob"></div>
+    </label>
+  </div>
+
+  <div class="btn-group">
+    <button class="btn btn-green btn-full" onclick="setMatchUrl()">
+      🚀 SET URL &amp; START AUTO-UPDATE
+    </button>
+  </div>
+  <div id="urlStatus" class="status"></div>
+  <div id="urlCurrent" class="config-info" style="display:none"></div>
+</div>
+
+<!-- ══ QUICK EVENT CONTROL ══ -->
+<div class="panel">
+  <div class="panel-title">⚡ QUICK EVENT (updates overlay instantly)</div>
+  <div class="ev-grid">
+    <div class="ev-btn sel" data-ev="LIVE"     onclick="setEvent(this,'LIVE')">🟢 LIVE</div>
+    <div class="ev-btn ev-wicket" data-ev="WICKET!" onclick="setEvent(this,'WICKET!')">💀 WICKET!</div>
+    <div class="ev-btn ev-six"    data-ev="SIX!"    onclick="setEvent(this,'SIX!')">💥 SIX!</div>
+    <div class="ev-btn"           data-ev="FOUR!"   onclick="setEvent(this,'FOUR!')">🔵 FOUR!</div>
+    <div class="ev-btn"           data-ev="DRS"     onclick="setEvent(this,'DRS')">🔴 DRS</div>
+    <div class="ev-btn"           data-ev="LBW CHECK" onclick="setEvent(this,'LBW CHECK')">👆 LBW</div>
+    <div class="ev-btn"           data-ev="REVIEW"  onclick="setEvent(this,'REVIEW')">🔍 REVIEW</div>
+    <div class="ev-btn"           data-ev="WIDE"    onclick="setEvent(this,'WIDE')">WIDE</div>
+    <div class="ev-btn"           data-ev="NO BALL" onclick="setEvent(this,'NO BALL')">NO BALL</div>
+    <div class="ev-btn"           data-ev="DRINKS"  onclick="setEvent(this,'DRINKS')">🥤 DRINKS</div>
+    <div class="ev-btn"           data-ev="RAIN STOP" onclick="setEvent(this,'RAIN STOP')">🌧 RAIN</div>
+    <div class="ev-btn"           data-ev="STRATEGIC TIMEOUT" onclick="setEvent(this,'STRATEGIC TIMEOUT')">⏸ TIME OUT</div>
+  </div>
+  <div id="evStatus" class="status"></div>
+</div>
+
+<!-- ══ MANUAL OVERRIDE (for corrections) ══ -->
+<div class="panel">
+  <div class="panel-title">✏️ MANUAL OVERRIDE (correct scraped data)</div>
+  <div class="g2">
+    <div>
+      <label>Team A Score</label>
+      <input type="text" id="manScoreA" placeholder="e.g. 122/4">
+    </div>
+    <div>
+      <label>Team A Overs</label>
+      <input type="text" id="manOversA" placeholder="e.g. 15.4">
+    </div>
+  </div>
+  <div class="g2" style="margin-top:10px">
+    <div>
+      <label>Batsman 1 Name</label>
+      <input type="text" id="manBat1Name" placeholder="">
+    </div>
+    <div>
+      <label>Batsman 1 Runs(Balls)</label>
+      <input type="text" id="manBat1Score" placeholder="e.g. 63(45)">
+    </div>
+  </div>
+  <div class="g2" style="margin-top:10px">
+    <div>
+      <label>Batsman 2 Name</label>
+      <input type="text" id="manBat2Name" placeholder="">
+    </div>
+    <div>
+      <label>Batsman 2 Runs(Balls)</label>
+      <input type="text" id="manBat2Score" placeholder="e.g. 19(13)">
+    </div>
+  </div>
+  <label>Ticker Text</label>
+  <input type="text" id="manTicker" placeholder="Custom news text for bottom ticker">
+  <div class="btn-group">
+    <button class="btn btn-blue" onclick="pushManualOverride()">📤 PUSH CORRECTION TO OVERLAY</button>
+  </div>
+  <div id="manStatus" class="status"></div>
+</div>
+
+<!-- ══ ACTIVITY LOG ══ -->
+<div class="panel">
+  <div class="panel-title">📋 ACTIVITY LOG</div>
+  <div id="actLog"></div>
+  <div class="btn-group" style="margin-top:8px">
+    <button class="btn btn-gray btn-sm" onclick="clearLog()">Clear Log</button>
+    <button class="btn btn-gray btn-sm" onclick="checkActions()">Check GitHub Actions Status</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════
+let GH = { token:'', user:'', repo:'cricket-overlay' };
+let currentEvent = 'LIVE';
+
+// Load saved config
+function loadSaved() {
+  try {
+    const saved = localStorage.getItem('gh_cricket_config');
+    if (saved) {
+      GH = {...GH, ...JSON.parse(saved)};
+      if (GH.token) {
+        document.getElementById('ghToken').value = GH.token;
+        document.getElementById('ghUser').value  = GH.user;
+        document.getElementById('ghRepo').value  = GH.repo;
+        document.getElementById('setupArea').style.opacity = '0.5';
+        log('🔑 GitHub config loaded from browser storage', 'info');
+      }
+    }
+    // Load last match URL
+    const lastUrl = localStorage.getItem('last_match_url');
+    if (lastUrl) {
+      document.getElementById('matchUrl').value = lastUrl;
+      const urlInfo = document.getElementById('urlCurrent');
+      urlInfo.textContent = '📌 Current: ' + lastUrl;
+      urlInfo.style.display = 'block';
+    }
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════════
+//  GITHUB API
+// ════════════════════════════════════════════
+async function ghApi(endpoint, method = 'GET', body = null) {
+  const res = await fetch(`https://api.github.com${endpoint}`, {
+    method,
+    headers: {
+      'Authorization': `token ${GH.token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: body ? JSON.stringify(body) : null
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+async function getFileSha(path) {
+  try {
+    const data = await ghApi(`/repos/${GH.user}/${GH.repo}/contents/${path}`);
+    return data.sha;
+  } catch(e) { return null; }
+}
+
+async function updateFile(path, content, message) {
+  const sha = await getFileSha(path);
+  const encoded = btoa(unescape(encodeURIComponent(
+    typeof content === 'string' ? content : JSON.stringify(content, null, 2)
+  )));
+  return ghApi(`/repos/${GH.user}/${GH.repo}/contents/${path}`, 'PUT', {
+    message,
+    content: encoded,
+    ...(sha ? { sha } : {})
+  });
+}
+
+async function readFile(path) {
+  const data = await ghApi(`/repos/${GH.user}/${GH.repo}/contents/${path}`);
+  return JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
+}
+
+// ════════════════════════════════════════════
+//  TOKEN SAVE & TEST
+// ════════════════════════════════════════════
+async function saveToken() {
+  GH.token = document.getElementById('ghToken').value.trim();
+  GH.user  = document.getElementById('ghUser').value.trim();
+  GH.repo  = document.getElementById('ghRepo').value.trim();
+
+  if (!GH.token || !GH.user) {
+    showStatus('tokenStatus', 'err', '❌ Please enter both token and username');
+    return;
+  }
+  showStatus('tokenStatus', 'load', '⏳ Testing connection...');
+  try {
+    const user = await ghApi('/user');
+    localStorage.setItem('gh_cricket_config', JSON.stringify(GH));
+    showStatus('tokenStatus', 'ok', `✅ Connected as ${user.login} — Token saved in browser!`);
+    document.getElementById('setupArea').style.opacity = '0.5';
+    log(`✅ GitHub connected: ${user.login}/${GH.repo}`, 'ok');
+  } catch(e) {
+    showStatus('tokenStatus', 'err', '❌ Connection failed: ' + e.message + ' — Check token has "repo" scope');
+  }
+}
+
+// ════════════════════════════════════════════
+//  SET MATCH URL
+// ════════════════════════════════════════════
+async function setMatchUrl() {
+  if (!GH.token) { alert('Set up GitHub token first!'); return; }
+  const url = document.getElementById('matchUrl').value.trim();
+  const enabled = document.getElementById('scraperEnabled').checked;
+
+  if (!url) { showStatus('urlStatus','err','❌ Please paste a match URL'); return; }
+  if (!url.includes('crex.com') && !url.includes('cricbuzz.com')) {
+    showStatus('urlStatus','warn','⚠️ URL should be from crex.com or cricbuzz.com');
+  }
+
+  showStatus('urlStatus', 'load', '⏳ Updating match-config.json on GitHub...');
+
+  try {
+    const config = {
+      matchUrl: url,
+      source: url.includes('crex') ? 'crex' : url.includes('cricbuzz') ? 'cricbuzz' : 'auto',
+      enabled: enabled,
+      lastSet: new Date().toISOString()
+    };
+    await updateFile('match-config.json', config, `🏏 Set match URL: ${url.substring(0, 60)}`);
+    localStorage.setItem('last_match_url', url);
+
+    const urlInfo = document.getElementById('urlCurrent');
+    urlInfo.textContent = '📌 Active: ' + url;
+    urlInfo.style.display = 'block';
+
+    showStatus('urlStatus', 'ok', `✅ Match URL set! GitHub Actions will start scraping in ~5 minutes.`);
+    log(`📡 Match URL set: ${url}`, 'ok');
+
+    // Trigger immediate workflow run
+    await triggerWorkflow(url);
+  } catch(e) {
+    showStatus('urlStatus', 'err', '❌ Failed: ' + e.message);
+    log('❌ URL set failed: ' + e.message, 'err');
+  }
+}
+
+async function triggerWorkflow(url) {
+  try {
+    await ghApi(`/repos/${GH.user}/${GH.repo}/actions/workflows/update.yml/dispatches`, 'POST', {
+      ref: 'main',
+      inputs: { match_url: url }
+    });
+    log('⚡ Triggered immediate GitHub Actions run!', 'ok');
+    showStatus('urlStatus', 'ok', '✅ Match URL set AND immediate scrape triggered! Overlay updates in ~60 seconds.');
+  } catch(e) {
+    log('⚠️ Auto-trigger failed (will run on schedule): ' + e.message, 'info');
+  }
+}
+
+// ════════════════════════════════════════════
+//  SET EVENT (instant update)
+// ════════════════════════════════════════════
+async function setEvent(btn, ev) {
+  document.querySelectorAll('.ev-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  currentEvent = ev;
+
+  if (!GH.token) {
+    showStatus('evStatus', 'warn', '⚠️ Set GitHub token to push events to overlay');
+    return;
+  }
+
+  showStatus('evStatus', 'load', `⏳ Pushing "${ev}" to overlay...`);
+  try {
+    const data = await readFile('data.json');
+    data.event = ev;
+    data.lastUpdated = new Date().toISOString();
+    await updateFile('data.json', data, `⚡ Event: ${ev}`);
+    showStatus('evStatus', 'ok', `✅ "${ev}" pushed! Overlay updates in ~5 seconds.`);
+    log(`⚡ Event pushed: ${ev}`, 'ok');
+  } catch(e) {
+    showStatus('evStatus', 'err', '❌ ' + e.message);
+    log('❌ Event push failed: ' + e.message, 'err');
+  }
+}
+
+// ════════════════════════════════════════════
+//  MANUAL OVERRIDE
+// ════════════════════════════════════════════
+async function pushManualOverride() {
+  if (!GH.token) { alert('Set up GitHub token first!'); return; }
+  showStatus('manStatus', 'load', '⏳ Pushing corrections...');
+  try {
+    const data = await readFile('data.json');
+
+    const scoreA = document.getElementById('manScoreA').value.trim();
+    const oversA = document.getElementById('manOversA').value.trim();
+    const bat1n  = document.getElementById('manBat1Name').value.trim();
+    const bat1s  = document.getElementById('manBat1Score').value.trim();
+    const bat2n  = document.getElementById('manBat2Name').value.trim();
+    const bat2s  = document.getElementById('manBat2Score').value.trim();
+    const ticker = document.getElementById('manTicker').value.trim();
+
+    if (scoreA) data.teamA.score = scoreA;
+    if (oversA) data.teamA.overs = oversA;
+    if (bat1n)  data.batsman1.name = bat1n.toUpperCase();
+    if (bat2n)  data.batsman2.name = bat2n.toUpperCase();
+    if (ticker) { data.ticker = ticker; data.showTicker = true; }
+
+    if (bat1s) {
+      const m = bat1s.match(/(\d+)\((\d+)\)/);
+      if (m) { data.batsman1.runs = parseInt(m[1]); data.batsman1.balls = parseInt(m[2]); }
+    }
+    if (bat2s) {
+      const m = bat2s.match(/(\d+)\((\d+)\)/);
+      if (m) { data.batsman2.runs = parseInt(m[1]); data.batsman2.balls = parseInt(m[2]); }
+    }
+
+    if (currentEvent !== 'LIVE') data.event = currentEvent;
+    data.lastUpdated = new Date().toISOString();
+
+    await updateFile('data.json', data, '✏️ Manual correction pushed');
+    showStatus('manStatus', 'ok', '✅ Corrections pushed! Overlay updates in ~5 seconds.');
+    log('✏️ Manual override pushed', 'ok');
+  } catch(e) {
+    showStatus('manStatus', 'err', '❌ ' + e.message);
+  }
+}
+
+// ════════════════════════════════════════════
+//  CHECK GITHUB ACTIONS
+// ════════════════════════════════════════════
+async function checkActions() {
+  if (!GH.token) { log('⚠️ No token saved', 'err'); return; }
+  try {
+    const runs = await ghApi(`/repos/${GH.user}/${GH.repo}/actions/runs?per_page=5`);
+    const latest = runs.workflow_runs?.[0];
+    if (latest) {
+      const status = latest.conclusion || latest.status;
+      const time = new Date(latest.updated_at).toLocaleTimeString();
+      log(`GitHub Actions: ${status} at ${time}`, status === 'success' ? 'ok' : 'info');
+      document.getElementById('liveStatus').textContent = status === 'success' ? 'LIVE ✅' : status.toUpperCase();
+    }
+  } catch(e) { log('Cannot check actions: ' + e.message, 'err'); }
+}
+
+// ════════════════════════════════════════════
+//  UTILITIES
+// ════════════════════════════════════════════
+function showStatus(id, type, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'status s-' + type;
+  setTimeout(() => { if (el.className.includes('s-ok')) el.style.display = 'none'; }, 8000);
+}
+
+function log(msg, type = 'info') {
+  const el = document.getElementById('actLog');
+  const time = new Date().toLocaleTimeString();
+  const cls = type === 'ok' ? 'log-ok' : type === 'err' ? 'log-err' : 'log-info';
+  el.innerHTML = `<div class="log-line"><span class="log-time">[${time}]</span> <span class="${cls}">${msg}</span></div>` + el.innerHTML;
+}
+
+function clearLog() { document.getElementById('actLog').innerHTML = ''; }
+
+// Auto-check actions every 30 seconds
+setInterval(() => { if (GH.token) checkActions(); }, 30000);
+
+// Init
+loadSaved();
+log('🏏 Control panel loaded', 'info');
+</script>
+</body>
+</html>
