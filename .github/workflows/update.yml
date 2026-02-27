@@ -35,12 +35,13 @@ jobs:
 
       - name: ⚙️ Apply Manual URL Override
         if: github.event.inputs.match_url != ''
-        run: node -e "var fs=require('fs');var cfg=JSON.parse(fs.readFileSync('match-config.json','utf8'));cfg.matchUrl='${{ github.event.inputs.match_url }}';cfg.enabled=true;cfg.lastSet=new Date().toISOString();fs.writeFileSync('match-config.json',JSON.stringify(cfg,null,2));console.log('URL set to:',cfg.matchUrl);"
+        env:
+          MATCH_URL: ${{ github.event.inputs.match_url }}
+        run: node set-url.js
 
       - name: 🔍 Check Config
         id: check_config
-        run: |
-          node check-config.js || echo "SKIP=true" >> $GITHUB_OUTPUT
+        run: node check-config.js || echo "SKIP=true" >> $GITHUB_OUTPUT
 
       - name: 🕷️ Scrape Live Data
         if: steps.check_config.outputs.SKIP != 'true'
