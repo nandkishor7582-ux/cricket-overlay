@@ -1,11 +1,9 @@
 name: 🏏 Cricket Auto-Update
 
 on:
-  # Run every 5 minutes automatically
   schedule:
     - cron: '*/5 * * * *'
 
-  # Also allow manual trigger from GitHub UI
   workflow_dispatch:
     inputs:
       match_url:
@@ -22,25 +20,20 @@ jobs:
     timeout-minutes: 4
 
     steps:
-      # 1. Checkout repo
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 1
 
-      # 2. Setup Node.js
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      # 3. Install dependencies
       - name: 📦 Install Dependencies
-        run: npm install --prefer-offline
+        run: npm install --no-package-lock
 
-      # 4. Override match URL if provided manually
       - name: ⚙️ Apply Manual URL Override
         if: github.event.inputs.match_url != ''
         run: |
@@ -54,32 +47,10 @@ jobs:
             console.log('Match URL set to:', cfg.matchUrl);
           "
 
-      # 5. Check if scraping is enabled
       - name: 🔍 Check Config
         id: check_config
         run: |
           node -e "
             const cfg = JSON.parse(require('fs').readFileSync('match-config.json','utf8'));
             console.log('enabled=' + cfg.enabled);
-            console.log('url=' + cfg.matchUrl);
-            process.exit(cfg.enabled && cfg.matchUrl ? 0 : 1);
-          " || echo "SKIP=true" >> $GITHUB_OUTPUT
-
-      # 6. Run the scraper
-      - name: 🕷️ Scrape Live Data
-        if: steps.check_config.outputs.SKIP != 'true'
-        run: node scraper.js
-        timeout-minutes: 3
-
-      # 7. Commit updated data.json back to repo
-      - name: 💾 Commit data.json
-        if: steps.check_config.outputs.SKIP != 'true'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "🏏 Cricket Bot"
-          git add data.json match-config.json
-          git diff --quiet && git diff --staged --quiet || \
-            git commit -m "🏏 Live update: $(node -e "const d=JSON.parse(require('fs').readFileSync('data.json','utf8')); console.log(d.teamA.name+' '+d.teamA.score+' vs '+d.teamB.name)" 2>/dev/null || echo 'Match data')"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            console.log('url=' + c
