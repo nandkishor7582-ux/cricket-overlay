@@ -1,0 +1,15 @@
+{
+  "match": {
+    "date": "2026-02-27",
+    "time": "18:40:35",
+    "teams": {
+      "team1": "Team A",
+      "team2": "Team B"
+    },
+    "score": {
+      "team1": 0,
+      "team2": 0
+    },
+    "status": "Upcoming"
+  }
+}
