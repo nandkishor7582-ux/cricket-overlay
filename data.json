@@ -1,76 +1,17 @@
 {
-  "teamA": {
-    "name": "PAKISTAN",
-    "shortName": "PAK",
-    "flagUrl": "",
-    "flagEmoji": "🇵🇰",
-    "score": "120/2",
-    "overs": "15.2",
-    "isBatting": true
-  },
-  "teamB": {
-    "name": "ENGLAND",
-    "shortName": "ENG",
-    "flagUrl": "",
-    "flagEmoji": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
-    "score": "180",
-    "overs": "",
-    "isBatting": false
-  },
-  "matchInfo": {
-    "format": "T20",
-    "series": "T20 World Cup 2024",
-    "venue": "MCG, Melbourne",
-    "partnership": "49(29)",
-    "crr": "7.79",
-    "rrr": "8.25",
-    "note": "PAK OPT TO BAT",
-    "inning": "1st Innings"
-  },
-  "event": "LBW CHECK",
-  "batsman1": {
-    "name": "AAAA",
-    "fullName": "Saim Ayub",
-    "runs": 5,
-    "balls": 3,
-    "fours": 7,
-    "sixes": 2,
-    "sr": "140.00",
-    "photoUrl": "",
-    "isStriker": true
-  },
-  "batsman2": {
-    "name": "VFDD",
-    "fullName": "Fakhar Zaman",
-    "runs": 19,
-    "balls": 13,
-    "fours": 2,
-    "sixes": 1,
-    "sr": "146.15",
-    "photoUrl": "",
-    "isStriker": false
-  },
-  "bowler": {
-    "name": "J OVERTON",
-    "fullName": "Jamie Overton",
-    "wickets": 1,
-    "runs": 22,
-    "overs": "2.4",
-    "economy": "8.25",
-    "photoUrl": ""
-  },
-  "nextBatter": {
-    "name": "BABAR AZAM",
-    "photoUrl": "",
-    "show": true
-  },
-  "lastWicket": {
-    "name": "RIZWAN",
-    "score": "25(24)",
-    "photoUrl": "",
-    "show": true
-  },
-  "ticker": "PAKISTAN vs ENGLAND | T20 WORLD CUP | MATCH 12 | PAKISTAN REQUIRE 58 RUNS FROM 26 BALLS",
-  "showTicker": true,
-  "lastUpdated": "2026-02-27T20:00:24.388Z"
+  "teamA": { "name": "ENG", "score": "145/4", "overs": "16.2", "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+  "teamB": { "name": "NZ", "score": "Yet to bat", "overs": "0.0", "flag": "🇳🇿" },
+  "matchInfo": "49th T20I • Super 8 • T20 World Cup 2026",
+  "event": "",
+  "batsman1": { "name": "SALT", "runs": 67, "balls": 41, "fours": 7, "sixes": 2, "isStriker": true },
+  "batsman2": { "name": "BROOK", "runs": 34, "balls": 28, "fours": 3, "sixes": 1, "isStriker": false },
+  "bowler": { "name": "SODHI", "overs": "3.2", "maidens": 0, "runs": 28, "wickets": 1 },
+  "lastWicket": "DUCKETT c Conway b Sodhi 22",
+  "nextBatter": "STOKES",
+  "runRate": "8.9",
+  "requiredRate": "",
+  "target": "",
+  "ticker": "ENG vs NZ • T20 World Cup 2026 Super 8",
+  "lastUpdated": "2026-02-28T01:35:00Z",
+  "source": "manual"
 }
